@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:sunil/resume.dart';
 
 class FormPage extends StatefulWidget {
   const FormPage({super.key});
@@ -8,18 +12,56 @@ class FormPage extends StatefulWidget {
 }
 
 class _FormPageState extends State<FormPage> {
+  Future postData(var body) async {
+    Uri url = Uri.parse("https://sunilnayak.com/submit-company-data");
+    var res = await http.post(url, body: body);
+    if (res.statusCode == 200) {
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+              title: const Text("Success"),
+              content: Container(
+                padding: const EdgeInsets.all(16),
+                child: const Text(
+                    "Thank you for submitting your information,I will be back as soon as possible."),
+              ),
+              actions: [
+                ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const Resume(),
+                          ));
+                    },
+                    child: const Text("Go to Home Page."))
+              ]),
+        );
+      }
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Something went wrong")));
+      }
+    }
+  }
+
   final _formKey = GlobalKey<FormState>();
-  String _companyName = '';
-  String _companyEmail = '';
-  String _phoneNumber = '';
-  String _jobDescription = '';
+  TextEditingController _companyName = TextEditingController();
+  TextEditingController _companyEmail = TextEditingController();
+  TextEditingController _phoneNumber = TextEditingController();
+  TextEditingController _jobDescription = TextEditingController();
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       // If the form is valid, display a Snack bar.
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Processing Data')),
-      );
+      postData({
+        'name': _companyName.text,
+        'email': _companyEmail.text,
+        'phoneNumber': _phoneNumber.text,
+        'jobDescription': _jobDescription.text
+      });
     }
   }
 
@@ -42,6 +84,7 @@ class _FormPageState extends State<FormPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     TextFormField(
+                      controller: _companyName,
                       decoration: InputDecoration(
                         labelText: 'Company Name',
                         border: OutlineInputBorder(
@@ -53,10 +96,10 @@ class _FormPageState extends State<FormPage> {
                         }
                         return null;
                       },
-                      onSaved: (value) => _companyName = value!,
                     ),
                     const SizedBox(height: 15),
                     TextFormField(
+                      controller: _companyEmail,
                       decoration: InputDecoration(
                         labelText: 'Company Email',
                         border: OutlineInputBorder(
@@ -72,10 +115,10 @@ class _FormPageState extends State<FormPage> {
                         }
                         return null;
                       },
-                      onSaved: (value) => _companyEmail = value!,
                     ),
                     const SizedBox(height: 15),
                     TextFormField(
+                      controller: _phoneNumber,
                       decoration: InputDecoration(
                         labelText: 'Phone Number',
                         border: OutlineInputBorder(
@@ -88,10 +131,10 @@ class _FormPageState extends State<FormPage> {
                         }
                         return null;
                       },
-                      onSaved: (value) => _phoneNumber = value!,
                     ),
                     const SizedBox(height: 15),
                     TextFormField(
+                      controller: _jobDescription,
                       decoration: InputDecoration(
                         labelText: 'Job Description',
                         border: OutlineInputBorder(
@@ -105,7 +148,6 @@ class _FormPageState extends State<FormPage> {
                         }
                         return null;
                       },
-                      onSaved: (value) => _jobDescription = value!,
                     ),
                     Center(
                       child: Padding(
